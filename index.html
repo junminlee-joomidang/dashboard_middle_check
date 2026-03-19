@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Business 대시보드 — 중간 점검</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3348;
+    --accent: #6c63ff;
+    --accent2: #38bdf8;
+    --accent3: #34d399;
+    --warn: #f59e0b;
+    --danger: #f87171;
+    --text: #e8eaf6;
+    --text-sub: #8892b0;
+    --text-dim: #4a5270;
+  }
+
+  body {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+
+  /* ── 공통 ── */
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+  .section { padding: 72px 0; }
+  .section + .section { border-top: 1px solid var(--border); }
+
+  h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
+  h2 { font-size: 22px; font-weight: 700; }
+  h3 { font-size: 16px; font-weight: 600; }
+  p  { color: var(--text-sub); }
+
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .tag-purple { background: rgba(108,99,255,0.15); color: #a29bfe; border: 1px solid rgba(108,99,255,0.3); }
+  .tag-blue   { background: rgba(56,189,248,0.12); color: #7dd3fc; border: 1px solid rgba(56,189,248,0.25); }
+  .tag-green  { background: rgba(52,211,153,0.12); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.25); }
+  .tag-amber  { background: rgba(245,158,11,0.12); color: #fcd34d; border: 1px solid rgba(245,158,11,0.25); }
+  .tag-red    { background: rgba(248,113,113,0.12); color: #fca5a5; border: 1px solid rgba(248,113,113,0.25); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .card-accent {
+    background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(56,189,248,0.05));
+    border-color: rgba(108,99,255,0.25);
+  }
+
+  /* ── HEADER ── */
+  .hero {
+    padding: 80px 0 56px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .hero-date { font-size: 13px; color: var(--text-dim); }
+  .hero h1 { margin-bottom: 12px; }
+  .hero p { font-size: 16px; max-width: 560px; }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+  .section-num {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .section-num.blue  { background: var(--accent2); }
+  .section-num.green { background: var(--accent3); }
+
+  /* ── DB STRUCTURE ── */
+  .db-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .db-node {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    position: relative;
+  }
+  .db-node.core {
+    background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(108,99,255,0.03));
+    border-color: rgba(108,99,255,0.35);
+  }
+  .db-node .icon { font-size: 20px; margin-bottom: 8px; display: block; }
+  .db-node .name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .db-node .desc { font-size: 12px; color: var(--text-sub); }
+
+  .flow-diagram {
+    margin: 32px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    align-items: center;
+  }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .flow-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    text-align: center;
+    min-width: 120px;
+  }
+  .flow-box.primary {
+    background: rgba(108,99,255,0.12);
+    border-color: rgba(108,99,255,0.4);
+    color: #a29bfe;
+    font-weight: 600;
+  }
+  .flow-box.secondary {
+    background: rgba(56,189,248,0.08);
+    border-color: rgba(56,189,248,0.3);
+    color: #7dd3fc;
+  }
+  .flow-box .box-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+
+  .flow-arrow {
+    color: var(--text-dim);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .flow-arrow.down {
+    display: block;
+    text-align: center;
+    margin: 6px 0;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  .relation-badge {
+    font-size: 10px;
+    background: rgba(245,158,11,0.15);
+    color: #fcd34d;
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 4px;
+    padding: 1px 6px;
+    white-space: nowrap;
+  }
+
+  /* ── VERIFY BANNER ── */
+  .verify-banner {
+    margin-top: 28px;
+    padding: 18px 22px;
+    background: rgba(52,211,153,0.07);
+    border: 1px solid rgba(52,211,153,0.25);
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .verify-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .verify-text strong { color: #6ee7b7; }
+  .verify-text p { margin-top: 4px; font-size: 13px; }
+
+  /* ── ISSUE CARDS ── */
+  .issue-block {
+    margin-bottom: 48px;
+  }
+  .issue-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 24px;
+    background: rgba(248,113,113,0.06);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 14px 14px 0 0;
+    border-bottom: none;
+  }
+  .issue-body {
+    padding: 20px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 14px 14px;
+  }
+  .issue-num {
+    width: 28px; height: 28px;
+    background: rgba(248,113,113,0.2);
+    border: 1px solid rgba(248,113,113,0.4);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fca5a5;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .issue-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .issue-desc { font-size: 13px; color: var(--text-sub); }
+
+  .solution-block {
+    margin-top: 16px;
+    padding: 16px 20px;
+    background: rgba(52,211,153,0.06);
+    border: 1px solid rgba(52,211,153,0.2);
+    border-radius: 10px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .solution-icon { font-size: 18px; flex-shrink: 0; }
+  .solution-text { font-size: 13px; color: var(--text-sub); }
+  .solution-text strong { color: #6ee7b7; font-size: 14px; display: block; margin-bottom: 4px; }
+
+  /* ── COMPARISON TABLE ── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .compare-card {
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border);
+  }
+  .compare-card.old {
+    background: rgba(248,113,113,0.05);
+    border-color: rgba(248,113,113,0.2);
+  }
+  .compare-card.new {
+    background: rgba(52,211,153,0.05);
+    border-color: rgba(52,211,153,0.2);
+  }
+  .compare-card .compare-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .compare-card.old .compare-label { color: #fca5a5; }
+  .compare-card.new .compare-label { color: #6ee7b7; }
+  .compare-card h3 { font-size: 15px; margin-bottom: 10px; }
+  .compare-card ul { list-style: none; }
+  .compare-card ul li {
+    font-size: 13px;
+    color: var(--text-sub);
+    padding: 5px 0;
+    padding-left: 14px;
+    position: relative;
+  }
+  .compare-card ul li::before { content: '·'; position: absolute; left: 2px; }
+
+  /* ── WORKFLOW ── */
+  .workflow-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+  }
+
+  .workflow-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .workflow-header {
+    padding: 16px 20px;
+    font-weight: 700;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .workflow-header .wf-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .workflow-card:nth-child(1) .workflow-header { background: rgba(108,99,255,0.1); border-color: rgba(108,99,255,0.2); }
+  .workflow-card:nth-child(1) .wf-num { background: rgba(108,99,255,0.3); color: #a29bfe; }
+  .workflow-card:nth-child(2) .workflow-header { background: rgba(56,189,248,0.08); border-color: rgba(56,189,248,0.2); }
+  .workflow-card:nth-child(2) .wf-num { background: rgba(56,189,248,0.25); color: #7dd3fc; }
+
+  .workflow-steps {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .step {
+    display: flex;
+    gap: 12px;
+    position: relative;
+  }
+  .step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 28px;
+    bottom: -8px;
+    width: 1px;
+    background: var(--border);
+  }
+  .step-dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    margin-top: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--text-sub);
+    z-index: 1;
+  }
+  .workflow-card:nth-child(1) .step-dot { border-color: rgba(108,99,255,0.5); color: #a29bfe; background: rgba(108,99,255,0.1); }
+  .workflow-card:nth-child(2) .step-dot { border-color: rgba(56,189,248,0.5); color: #7dd3fc; background: rgba(56,189,248,0.1); }
+
+  .step-content {
+    padding-bottom: 18px;
+  }
+  .step-content .step-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .step-content .step-desc {
+    font-size: 12px;
+    color: var(--text-sub);
+  }
+
+  /* ── MANAGE TYPE ── */
+  .manage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .manage-card {
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .manage-card .type-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .manage-card:nth-child(1) .type-tag { color: var(--accent2); }
+  .manage-card:nth-child(2) .type-tag { color: var(--accent3); }
+  .manage-card h3 { font-size: 14px; margin-bottom: 8px; }
+  .manage-card .examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .example-chip {
+    font-size: 11px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 9px;
+    color: var(--text-sub);
+  }
+  .manage-card .how {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+  .manage-card:nth-child(1) .how {
+    background: rgba(56,189,248,0.06);
+    border: 1px solid rgba(56,189,248,0.15);
+    color: #7dd3fc;
+  }
+  .manage-card:nth-child(2) .how {
+    background: rgba(52,211,153,0.06);
+    border: 1px solid rgba(52,211,153,0.15);
+    color: #6ee7b7;
+  }
+
+  /* ── SUMMARY ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .summary-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+  .summary-card h3 { font-size: 14px; margin-bottom: 6px; }
+  .summary-card p { font-size: 12px; }
+
+  /* ── FOOTER ── */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 0;
+    color: var(--text-dim);
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ── DB NODE GRID (구조도) ── */
+  .structure-diagram {
+    margin-top: 32px;
+    position: relative;
+  }
+
+  .struct-center {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .struct-center .center-box {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(56,189,248,0.1));
+    border: 1.5px solid rgba(108,99,255,0.4);
+    border-radius: 14px;
+    padding: 16px 32px;
+    min-width: 220px;
+  }
+  .struct-center .center-box .icon { font-size: 24px; display: block; margin-bottom: 4px; }
+  .struct-center .center-box .name { font-size: 16px; font-weight: 700; }
+  .struct-center .center-box .sub { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+
+  .struct-branches {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+    position: relative;
+  }
+  .struct-branches::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .branch-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 10px;
+    text-align: center;
+    position: relative;
+  }
+  .branch-box::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 12px;
+    background: var(--border);
+  }
+  .branch-box .b-icon { font-size: 18px; display: block; margin-bottom: 5px; }
+  .branch-box .b-name { font-size: 12px; font-weight: 600; }
+  .branch-box .b-sub { font-size: 10px; color: var(--text-sub); margin-top: 3px; }
+  .branch-box.connected {
+    border-color: rgba(108,99,255,0.3);
+    background: rgba(108,99,255,0.05);
+  }
+
+  /* ── RELATION ROW ── */
+  .relation-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .rel-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+  .rel-arrow { color: var(--text-dim); font-size: 12px; }
+  .rel-badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .rel-badge.relation { background: rgba(245,158,11,0.15); color: #fcd34d; }
+  .rel-badge.rollup   { background: rgba(108,99,255,0.15); color: #a29bfe; }
+
+  @media (max-width: 700px) {
+    .db-grid, .compare-grid, .workflow-grid, .manage-grid, .summary-grid,
+    .struct-branches { grid-template-columns: 1fr; }
+    .struct-branches { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     HERO
+════════════════════════════════════════ -->
+<div class="hero">
+  <div class="container">
+    <div class="hero-meta">
+      <span class="tag tag-purple">중간 점검</span>
+      <span class="hero-date">2026. 03. 19</span>
+    </div>
+    <h1>Team Business 대시보드<br>사용 경험 공유</h1>
+    <p style="margin-top: 14px;">구조 파악 → 불편했던 점 → 해결 방법 → 나의 사용 방식 순으로 정리했습니다.</p>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 1: 대시보드 구조
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="container">
+    <div class="section-label">
+      <div class="section-num">1</div>
+      <div>
+        <h2>대시보드 구조 파악</h2>
+        <p style="margin-top:4px; font-size:13px;">내가 이해하고 있던 구조가 맞는지 확인</p>
+      </div>
+    </div>
+
+    <!-- 전체 대시보드 구조 -->
+    <div class="structure-diagram">
+      <div class="struct-center">
+        <div class="center-box">
+          <span class="icon">🏠</span>
+          <div class="name">Team Business 대시보드</div>
+          <div class="sub">모든 DB의 허브 페이지</div>
+        </div>
+      </div>
+      <div class="struct-branches">
+        <div class="branch-box connected">
+          <span class="b-icon">📨</span>
+          <div class="b-name">업무함</div>
+          <div class="b-sub">멤버별 태스크 관리</div>
+        </div>
+        <div class="branch-box connected">
+          <span class="b-icon">🥊</span>
+          <div class="b-name">프로젝트</div>
+          <div class="b-sub">프로젝트 단위 관리</div>
+        </div>
+        <div class="branch-box">
+          <span class="b-icon">🗓️</span>
+          <div class="b-name">주간회의</div>
+          <div class="b-sub">회의 기록</div>
+        </div>
+        <div class="branch-box">
+          <span class="b-icon">📅</span>
+          <div class="b-name">공유일정</div>
+          <div class="b-sub">팀 공유 일정</div>
+        </div>
+        <div class="branch-box">
+          <span class="b-icon">🔍</span>
+          <div class="b-name">공유자료실</div>
+          <div class="b-sub">팀 문서 아카이브</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 핵심 연결 구조 -->
+    <div style="margin-top: 36px;">
+      <h3 style="margin-bottom: 16px; color: var(--text-sub); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">핵심 DB 연결 구조</h3>
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <div class="flow-box" style="min-width: 160px; text-align: center;">
+          <div style="font-weight: 700; font-size: 14px;">📨 업무함</div>
+          <div class="box-sub">담당자 · 상태 · 우선순위</div>
+          <div class="box-sub" style="margin-top: 6px; font-size: 11px; color: var(--text-dim);">멤버별 브레인덤프 포함</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; align-items: center;">
+          <div style="font-size: 10px; color: var(--text-sub);">관계(Relation)</div>
+          <div style="font-size: 20px; color: var(--accent);">⟷</div>
+          <div style="font-size: 10px; color: var(--text-sub);">하위 업무</div>
+        </div>
+        <div class="flow-box primary" style="min-width: 160px; text-align: center;">
+          <div style="font-weight: 700; font-size: 14px;">🥊 프로젝트</div>
+          <div class="box-sub" style="color: rgba(162,155,254,0.6);">진척률 롤업 자동 집계</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; align-items: center;">
+          <div style="font-size: 10px; color: var(--text-sub);">관계(Relation)</div>
+          <div style="font-size: 20px; color: var(--accent2);">⟷</div>
+          <div style="font-size: 10px; color: var(--text-sub);"></div>
+        </div>
+        <div class="flow-box secondary" style="min-width: 160px; text-align: center;">
+          <div style="font-weight: 700; font-size: 14px;">📊 주간업무보고</div>
+          <div class="box-sub" style="color: rgba(125,211,252,0.6);">업무함 → 주간보고 연결</div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 2: 전문가 구조 검토
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="container">
+    <div class="section-label">
+      <div class="section-num" style="background: var(--warn);">2</div>
+      <div>
+        <h2>구조 전문가 검토 의견</h2>
+        <p style="margin-top:4px; font-size:13px;">업무 공유 · 진행 관리 · 관리자 가시성 관점에서 분석</p>
+      </div>
+    </div>
+
+    <!-- 총평 -->
+    <div style="padding: 20px 24px; background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.2); border-radius: 12px; margin-bottom: 32px;">
+      <div style="display: flex; gap: 12px; align-items: flex-start;">
+        <span style="font-size: 20px; flex-shrink: 0;">📋</span>
+        <div>
+          <div style="font-weight: 700; font-size: 15px; color: #6ee7b7; margin-bottom: 6px;">총평 — 소규모 팀에 적합한 구조, 핵심 리스크는 운영 습관</div>
+          <p style="font-size: 13px;">허브 페이지 + DB 관계·롤업 구조는 Jira · Linear 등 전문 PM 도구에서도 동일하게 쓰는 방식입니다. 소규모 팀(~10명) 기준으로는 충분히 잘 설계된 구조입니다. 단, 구조가 작동하려면 팀원의 상태 업데이트 루틴이 뒷받침되어야 합니다.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 잘 설계된 부분 -->
+    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-sub); margin-bottom: 16px;">잘 설계된 부분</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 36px;">
+
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; display: flex; gap: 12px;">
+        <span style="font-size: 18px; flex-shrink: 0;">🎯</span>
+        <div>
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">중앙화된 허브 페이지</div>
+          <p style="font-size: 12px;">6개 DB 뷰를 한 페이지에서 참조 가능. 관리자가 여러 페이지를 열지 않아도 전체 현황 파악 가능.</p>
+        </div>
+      </div>
+
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; display: flex; gap: 12px;">
+        <span style="font-size: 18px; flex-shrink: 0;">🔗</span>
+        <div>
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">업무함 ↔ 프로젝트 관계 + 롤업</div>
+          <p style="font-size: 12px;">태스크가 업데이트되면 프로젝트 진척률이 자동 반영. 수동 집계 없이 프로젝트 상태를 실시간 파악 가능.</p>
+        </div>
+      </div>
+
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; display: flex; gap: 12px;">
+        <span style="font-size: 18px; flex-shrink: 0;">📊</span>
+        <div>
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">주간업무보고 DB 연동</div>
+          <p style="font-size: 12px;">보고가 별도 문서가 아니라 실제 업무 데이터와 연결됨. 보고서가 데이터 기반이 되어 신뢰도 상승.</p>
+        </div>
+      </div>
+
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; display: flex; gap: 12px;">
+        <span style="font-size: 18px; flex-shrink: 0;">🧠</span>
+        <div>
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">멤버별 개인 페이지 분리</div>
+          <p style="font-size: 12px;">브레인덤프 공간이 있어 캡처 마찰이 낮음. 즉시 기록 후 필요한 것만 공식 DB로 올리는 구조가 실용적.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 예상되는 리스크 -->
+    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-sub); margin-bottom: 16px;">예상되는 리스크</h3>
+    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 36px;">
+
+      <div style="background: rgba(248,113,113,0.05); border: 1px solid rgba(248,113,113,0.18); border-radius: 10px; padding: 18px 20px; display: flex; gap: 14px;">
+        <span style="font-size: 16px; flex-shrink: 0; margin-top: 2px;">⚠️</span>
+        <div>
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px; color: #fca5a5;">롤업 신뢰도 = 팀원 업데이트 습관에 100% 의존</div>
+          <p style="font-size: 13px;">진척률 롤업은 업무 상태가 꾸준히 업데이트되어야 의미가 있습니다. 갱신이 밀리면 관리자 뷰가 현실과 괴리되고, 결국 대시보드를 신뢰하지 않게 됩니다. 구조 문제가 아니라 운영 루틴 문제이며, 이게 가장 현실적인 리스크입니다.</p>
+        </div>
+      </div>
+
+      <div style="background: rgba(248,113,113,0.05); border: 1px solid rgba(248,113,113,0.18); border-radius: 10px; padding: 18px 20px; display: flex; gap: 14px;">
+        <span style="font-size: 16px; flex-shrink: 0; margin-top: 2px;">⚠️</span>
+        <div>
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px; color: #fca5a5;">프로젝트 → 업무함 2레벨 한계</div>
+          <p style="font-size: 13px;">업무 복잡도가 높아질 경우, "프로젝트 > 에픽 > 태스크" 3단계가 필요해질 수 있습니다. 현재 구조에서는 중간 단계가 없어 모든 태스크가 평면으로 나열됩니다. 소규모 팀·단순 업무에서는 문제 없지만, 확장 시 한계가 올 수 있습니다.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 적용하면 좋은 개선 아이디어 -->
+    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-sub); margin-bottom: 16px;">적용하면 좋은 개선 아이디어</h3>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+
+      <div style="background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 16px 20px; display: flex; gap: 14px; align-items: flex-start;">
+        <span style="font-size: 15px; flex-shrink: 0;">💡</span>
+        <div>
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">대시보드에 전 멤버 P1 필터 뷰 추가</div>
+          <p style="font-size: 13px;">업무함 DB에서 우선순위 = P1(즉시처리)만 필터한 뷰를 대시보드 상단에 추가하면, 관리자가 긴급 사항을 따로 확인하지 않아도 한눈에 파악 가능합니다. 현재 구조에서 뷰 하나 추가로 해결됩니다.</p>
+        </div>
+      </div>
+
+      <div style="background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent2); border-radius: 0 10px 10px 0; padding: 16px 20px; display: flex; gap: 14px; align-items: flex-start;">
+        <span style="font-size: 15px; flex-shrink: 0;">💡</span>
+        <div>
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">주간회의 전 상태 업데이트를 팀 루틴으로 명문화</div>
+          <p style="font-size: 13px;">구조 개선이 아닌 운영 약속의 문제입니다. "주간회의 전날까지 업무 상태 업데이트" 규칙 하나만 팀에 정착시키면 대시보드 신뢰도가 크게 올라갑니다.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 3: 사용 경험 — 불편했던 점 & 해결
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="container">
+    <div class="section-label">
+      <div class="section-num blue">3</div>
+      <div>
+        <h2>사용하면서 생긴 의문점들</h2>
+        <p style="margin-top:4px; font-size:13px;">문제 제기 → 직접 써보면서 찾은 해결 방법</p>
+      </div>
+    </div>
+
+    <!-- ISSUE 1 -->
+    <div class="issue-block">
+      <div class="issue-header">
+        <div class="issue-num">1</div>
+        <div>
+          <div class="issue-title">태스크를 쌓아서 프로젝트에 묶는 방식 아닌가?</div>
+          <div class="issue-desc">나는 프로젝트를 먼저 잡고 하위 업무를 나누는 방식을 선호하는데, 이 대시보드는 태스크가 계속 쌓이는 구조처럼 느껴졌다.</div>
+        </div>
+      </div>
+      <div class="issue-body">
+
+        <!-- 비교 -->
+        <div class="compare-grid">
+          <div class="compare-card old">
+            <div class="compare-label">기존 방식 (주미당 프로젝트 허브)</div>
+            <h3>트리 구조 (무한 하위 계층)</h3>
+            <ul>
+              <li>프로젝트 페이지 생성</li>
+              <li>하위에 세부 업무 페이지 추가</li>
+              <li>다시 그 하위에 또 페이지 추가</li>
+              <li>카테고리별 아카이브가 자연스럽게 됨</li>
+            </ul>
+          </div>
+          <div class="compare-card new">
+            <div class="compare-label">팀 비즈니스 대시보드</div>
+            <h3>DB 구조 (2레벨 고정)</h3>
+            <ul>
+              <li>업무함 DB에 태스크 페이지 생성</li>
+              <li>프로젝트 DB와 관계로 연결</li>
+              <li>롤업으로 진척률 자동 집계</li>
+              <li>필터·정렬로 다양한 뷰 제공</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="solution-block">
+          <div class="solution-icon">💡</div>
+          <div class="solution-text">
+            <strong>해결: 프로젝트 기반으로 써도 됩니다</strong>
+            프로젝트 DB에서 먼저 프로젝트를 만들고, 업무함에서 해당 프로젝트에 연결하는 방식으로 기존 트리 구조와 거의 동일하게 운영 가능합니다. 실제로 지금 그렇게 쓰고 있고, 클로드 코드로 맥락·목적·완료기준도 자동 작성하면서 기존 업무를 이전하는 중입니다.
+          </div>
+        </div>
+
+        <div class="solution-block" style="margin-top: 10px; background: rgba(108,99,255,0.05); border-color: rgba(108,99,255,0.2);">
+          <div class="solution-icon">🔍</div>
+          <div class="solution-text">
+            <strong style="color: #a29bfe;">페이지가 계속 쌓이는 문제 → 필터로 해결</strong>
+            완료된 태스크는 상태를 "완료"로 바꾸면 뷰 필터에서 자동으로 숨겨집니다. 삭제하지 않아도 되고, 나중에 아카이브로 꺼내볼 수도 있습니다.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ISSUE 2 -->
+    <div class="issue-block">
+      <div class="issue-header">
+        <div class="issue-num">2</div>
+        <div>
+          <div class="issue-title">완료 시점이 없는 지속 관리 업무는 어떻게?</div>
+          <div class="issue-desc">필요 → 수행 → 완료 3단계를 거치는 업무엔 잘 맞는데, 매출 관리나 SNS 운영처럼 끝이 없는 업무는 어떻게 써야 하지?</div>
+        </div>
+      </div>
+      <div class="issue-body">
+
+        <div class="manage-grid">
+          <div class="manage-card">
+            <div class="type-tag">📆 데일리 · 위클리 지속 관리</div>
+            <h3>완료 없이 계속 업데이트되는 업무</h3>
+            <div class="examples">
+              <span class="example-chip">매출 현황 관리</span>
+              <span class="example-chip">SNS 운영</span>
+              <span class="example-chip">재고·자재 관리</span>
+            </div>
+            <div class="how">
+              → 페이지 하나를 지속 업데이트하는 문서로 운영<br>
+              (프로젝트 DB에 "상시 관리" 항목으로 등록)
+            </div>
+          </div>
+          <div class="manage-card">
+            <div class="type-tag">🔄 주기적으로 반복되는 업무</div>
+            <h3>주기가 있어서 시즌마다 새로 만드는 업무</h3>
+            <div class="examples">
+              <span class="example-chip">메뉴 변경</span>
+              <span class="example-chip">시즌 마케팅</span>
+              <span class="example-chip">인사 채용</span>
+            </div>
+            <div class="how">
+              → 시즌별 프로젝트로 새로 생성<br>
+              (예: "26년 봄 메뉴 변경 프로젝트")
+            </div>
+          </div>
+        </div>
+
+        <div class="solution-block" style="margin-top: 16px;">
+          <div class="solution-icon">💡</div>
+          <div class="solution-text">
+            <strong>업무 유형에 따라 운영 방식을 나눠서 쓰면 됩니다</strong>
+            지속 관리 업무라도 DB 구조 안에서 충분히 운영 가능합니다. 핵심은 "완료"를 목표로 하는 업무냐, "유지"를 목표로 하는 업무냐를 구분하는 것입니다.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 3: 나의 사용 방식
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="container">
+    <div class="section-label">
+      <div class="section-num green">4</div>
+      <div>
+        <h2>결론: 나의 사용 방식 2가지</h2>
+        <p style="margin-top:4px; font-size:13px;">실제로 어떻게 쓰고 있는가</p>
+      </div>
+    </div>
+
+    <div class="workflow-grid">
+
+      <!-- 방식 1 -->
+      <div class="workflow-card">
+        <div class="workflow-header">
+          <div class="wf-num">A</div>
+          프로젝트 기반 업무 관리
+          <span class="tag tag-purple" style="margin-left: auto;">공식 아카이브</span>
+        </div>
+        <div class="workflow-steps">
+          <div class="step">
+            <div class="step-dot">1</div>
+            <div class="step-content">
+              <div class="step-title">프로젝트 페이지 먼저 생성</div>
+              <div class="step-desc">프로젝트 DB에서 큰 단위의 업무 단위를 먼저 잡는다</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">2</div>
+            <div class="step-content">
+              <div class="step-title">하위 업무 페이지 생성</div>
+              <div class="step-desc">업무함 DB에 태스크 추가 → 프로젝트와 관계 연결</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">3</div>
+            <div class="step-content">
+              <div class="step-title">맥락 · 목적 · 완료기준 작성</div>
+              <div class="step-desc">클로드 코드로 자동 작성 (기존 업무 이전 시 적용 중)</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">4</div>
+            <div class="step-content">
+              <div class="step-title">업무 진행 및 완료 처리</div>
+              <div class="step-desc">상태 변경 → 필터에서 자동으로 숨겨짐</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 방식 2 -->
+      <div class="workflow-card">
+        <div class="workflow-header">
+          <div class="wf-num">B</div>
+          개인 브레인덤프 → 선별 공유
+          <span class="tag tag-blue" style="margin-left: auto;">개인 관리</span>
+        </div>
+        <div class="workflow-steps">
+          <div class="step">
+            <div class="step-dot">1</div>
+            <div class="step-content">
+              <div class="step-title">멤버별 페이지에 할일 기록</div>
+              <div class="step-desc">형식 없이 할일들을 쭉 브레인덤프 → 잊어버리지 않기</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">2</div>
+            <div class="step-content">
+              <div class="step-title">아카이브 / 공유가 필요한 것 → A 방식으로</div>
+              <div class="step-desc">팀에 공유하거나 기록으로 남겨야 하는 업무는 프로젝트·업무함 페이지로 정식 등록</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">3</div>
+            <div class="step-content">
+              <div class="step-title">공유 불필요한 것 → 투두 체크로 마무리</div>
+              <div class="step-desc">개인 메모 수준의 할일은 브레인덤프에서 체크 처리로 끝냄</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 전체 흐름 요약 -->
+    <div style="margin-top: 32px; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px;">
+      <h3 style="margin-bottom: 16px; font-size: 13px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px;">전체 업무 흐름 요약</h3>
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <div style="background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; padding: 10px 16px; font-size: 13px; text-align: center;">
+          <div style="font-weight: 600; color: #7dd3fc;">브레인덤프</div>
+          <div style="font-size: 11px; color: var(--text-sub); margin-top: 2px;">멤버 개인 페이지</div>
+        </div>
+        <div style="color: var(--text-dim); font-size: 18px;">→</div>
+        <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; font-size: 13px; text-align: center;">
+          <div style="font-weight: 600; color: var(--text-sub);">선별</div>
+          <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">공유 필요 여부</div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="color: var(--text-dim); font-size: 12px;">공유 O →</div>
+            <div style="color: var(--text-dim); font-size: 12px;">공유 X →</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.25); border-radius: 8px; padding: 8px 14px; font-size: 12px; color: #a29bfe; font-weight: 600;">프로젝트 · 업무함 등록 (A 방식)</div>
+            <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 12px; color: var(--text-sub);">투두 체크 마무리</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 4: 정리
+════════════════════════════════════════ -->
+<div class="section">
+  <div class="container">
+    <h2 style="margin-bottom: 24px;">핵심 정리</h2>
+    <div class="summary-grid">
+      <div class="summary-card">
+        <span class="summary-icon">🏗️</span>
+        <h3>프로젝트 기반으로 써도 된다</h3>
+        <p>태스크 먼저 방식이 아니라, 프로젝트 먼저 잡고 하위 업무 추가하는 방식으로 운영 가능</p>
+      </div>
+      <div class="summary-card">
+        <span class="summary-icon">🔍</span>
+        <h3>쌓이는 페이지는 필터로 관리</h3>
+        <p>완료 처리 + 뷰 필터 활용으로 깔끔하게 유지 가능. 삭제 없이도 됨</p>
+      </div>
+      <div class="summary-card">
+        <span class="summary-icon">♾️</span>
+        <h3>지속 관리도 방식만 바꾸면 OK</h3>
+        <p>데일리 지속 → 상시 관리 문서 / 주기 반복 → 시즌별 프로젝트 생성</p>
+      </div>
+    </div>
+
+    <div style="margin-top: 28px; padding: 20px 24px; background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(56,189,248,0.05)); border: 1px solid rgba(108,99,255,0.2); border-radius: 12px;">
+      <p style="font-size: 14px; color: var(--text);">
+        <strong style="color: #a29bfe;">결론:</strong>
+        대시보드 구조 자체가 잘못된 게 아니라, <strong>사용 방식을 프로젝트 기반으로 맞추고 필터를 적극 활용</strong>하면 기존에 쓰던 방식과 거의 동일하게 운영할 수 있습니다. 지속 관리 업무도 유형에 따라 방식을 나누면 대응 가능합니다.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="container">
+  <div class="footer">
+    <span>Team Business 대시보드 중간 점검 — 2026.03.19</span>
+    <span>이준민</span>
+  </div>
+</div>
+
+</body>
+</html>
